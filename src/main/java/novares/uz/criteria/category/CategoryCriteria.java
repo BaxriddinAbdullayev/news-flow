@@ -13,6 +13,8 @@ import org.springframework.data.jpa.domain.Specification;
 @Setter
 public class CategoryCriteria extends GenericCriteria {
 
+    private String lang;
+
     @Builder(builderMethodName = "childBuilder")
     public CategoryCriteria(Long id, Integer page, Integer size, Sort.Direction direction, String sort) {
         super(id, page, size, direction, sort);

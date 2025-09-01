@@ -13,6 +13,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -173,15 +174,17 @@ public interface NewsRepository extends JpaRepository<News, Long>, JpaSpecificat
               AND (:lang is null or LOWER(nt.lang) = LOWER(:lang))
               and exists(select 1
                          from news_tag nt
-                                  left join tag t on nt.tag_id = t.id
+                                  left join tag t on nt.tag_id = t.id and t.is_deleted = false
                          where t.is_deleted = false
+                           AND t.is_active = true
                            AND (:tag IS NULL OR LOWER(t.code) = LOWER(:tag))
                            and nt.news_id = n.id)
               and exists(select 1
                          from category c
                                   left join category_translation ct on c.id = ct.category_id and ct.is_deleted = false
                          where c.is_deleted = false
-                           and c.id = n.category_id
+                           AND c.is_active = true
+                           AND c.id = n.category_id
                            AND (:lang is null or LOWER(ct.lang) = LOWER(:lang))
                            AND (:categoryId IS NULL OR c.id = :categoryId))
             """,
@@ -213,6 +216,7 @@ public interface NewsRepository extends JpaRepository<News, Long>, JpaSpecificat
             Pageable pageable
     );
 
+    List<News> findAllByPublishAtLessThanEqualAndStatus(ZonedDateTime now, NewsStatus status);
 
-
+    List<News> findAllByUnpublishAtLessThanEqualAndStatus(ZonedDateTime now, NewsStatus status);
 }

@@ -2,12 +2,16 @@ package novares.uz.service.ads;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import novares.uz.collection.AdsPlacementCollection;
+import novares.uz.collection.NewsCollection;
 import novares.uz.criteria.ads.AdsPlacementCriteria;
+import novares.uz.criteria.news.NewsCriteria;
 import novares.uz.domain.ads.AdsPlacement;
 import novares.uz.dto.ads.AdsPlacementCrudDto;
 import novares.uz.mapper.ads.AdsPlacementMapper;
 import novares.uz.repository.ads.AdsPlacementRepository;
 import novares.uz.service.GenericCrudService;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -52,5 +56,18 @@ public class AdsPlacementService implements GenericCrudService<AdsPlacement, Ads
     public void delete(Long id) {
         AdsPlacement entity = get(id);
         entity.setDeleted(true);
+    }
+
+    @Cacheable(
+            value = "publicAds",
+            key = "#criteria.placementCode + '_' + (#criteria.categoryId ?: 'all') + '_' + (#criteria.lang ?: 'default')"
+    )
+    public Page<AdsPlacementCollection> getAdsFilteredForPublic(AdsPlacementCriteria criteria) {
+        return repository.getAdsFilteredForPublic(
+                criteria.getPlacementCode(),
+                criteria.getCategoryId(),
+                criteria.getLang(),
+                PageRequest.of(criteria.getPage(), criteria.getSize(), Sort.by(criteria.getDirection(), criteria.getSort()))
+        );
     }
 }

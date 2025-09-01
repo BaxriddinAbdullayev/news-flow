@@ -11,7 +11,6 @@ import novares.uz.domain.Auditable;
 @Table(name = "category")
 public class Category extends Auditable<Long> {
 
-
     @ManyToOne(fetch = FetchType.LAZY)
     private Category parent;
 

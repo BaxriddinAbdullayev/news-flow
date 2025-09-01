@@ -8,11 +8,14 @@ import novares.uz.dto.tag.TagCrudDto;
 import novares.uz.mapper.tag.TagMapper;
 import novares.uz.repository.tag.TagRepository;
 import novares.uz.service.GenericCrudService;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -53,5 +56,12 @@ public class TagService implements GenericCrudService<Tag, TagCrudDto, TagCriter
     public void delete(Long id) {
         Tag entity = get(id);
         entity.setDeleted(true);
+    }
+
+    @Cacheable(value = "tags", key = "'all'")
+    @Transactional(readOnly = true)
+    public List<Tag> listForPublic() {
+        System.out.println("Bazadan olib kelindi.");
+        return repository.findAllByActiveTrueAndDeletedFalse();
     }
 }

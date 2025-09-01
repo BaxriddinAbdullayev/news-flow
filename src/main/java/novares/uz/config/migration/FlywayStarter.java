@@ -1,5 +1,7 @@
 package novares.uz.config.migration;
 
+
+
 import lombok.RequiredArgsConstructor;
 import org.flywaydb.core.Flyway;
 import org.springframework.boot.CommandLineRunner;

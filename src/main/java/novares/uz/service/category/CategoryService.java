@@ -2,6 +2,7 @@ package novares.uz.service.category;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import novares.uz.collection.CategoryCollection;
 import novares.uz.criteria.category.CategoryCriteria;
 import novares.uz.domain.category.Category;
 import novares.uz.domain.category.CategoryTranslation;
@@ -14,6 +15,7 @@ import novares.uz.mapper.category.CategoryTranslationMapper;
 import novares.uz.repository.category.CategoryRepository;
 import novares.uz.repository.category.CategoryTranslationRepository;
 import novares.uz.service.GenericCrudService;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -58,6 +60,7 @@ public class CategoryService implements GenericCrudService<Category, CategoryCru
                 PageRequest.of(criteria.getPage(), criteria.getSize(), Sort.by(criteria.getDirection(), criteria.getSort())));
     }
 
+    @Cacheable(value = "categories", key = "#criteria.lang ?: 'default'")
     public Page<CategoryDto> listCategoryWithTranslation(CategoryCriteria criteria) {
 
         Pageable pageable = PageRequest.of(
@@ -147,5 +150,14 @@ public class CategoryService implements GenericCrudService<Category, CategoryCru
 
     private Category getCategory(Long id) {
         return repository.findByIdAndDeletedFalse(id).orElseThrow(() -> new EntityNotFoundException(String.valueOf(id)));
+    }
+
+
+    @Cacheable(value = "publicCategories", key = "#criteria.lang ?: 'default'")
+    public Page<CategoryCollection> getNewsBySlugAndLang(CategoryCriteria criteria) {
+        return repository.getCategoryFilteredForPublic(
+                criteria.getLang(),
+                PageRequest.of(criteria.getPage(), criteria.getSize(), Sort.by(criteria.getDirection(), criteria.getSort()))
+        );
     }
 }

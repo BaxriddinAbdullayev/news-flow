@@ -13,6 +13,10 @@ import org.springframework.data.jpa.domain.Specification;
 @Setter
 public class AdsPlacementCriteria extends GenericCriteria {
 
+    private String placementCode;
+    private String lang;
+    private Long categoryId;
+
     @Builder(builderMethodName = "childBuilder")
     public AdsPlacementCriteria(Long id, Integer page, Integer size, Sort.Direction direction, String sort) {
         super(id, page, size, direction, sort);

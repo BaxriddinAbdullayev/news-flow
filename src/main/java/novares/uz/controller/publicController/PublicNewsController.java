@@ -5,7 +5,6 @@ import novares.uz.collection.NewsCollection;
 import novares.uz.criteria.news.NewsCriteria;
 import novares.uz.domain.news.News;
 import novares.uz.dto.AppResponse;
-import novares.uz.dto.news.NewsDto;
 import novares.uz.mapper.news.NewsMapper;
 import novares.uz.service.message.ResourceBundleService;
 import novares.uz.service.news.NewsService;
@@ -19,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @AllArgsConstructor
 @RequestMapping(value = "${app.api.public-path}", produces = "application/json")
-public class NewsPublicController {
+public class PublicNewsController {
 
 
     private final NewsService service;

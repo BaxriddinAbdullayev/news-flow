@@ -11,6 +11,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -27,6 +28,8 @@ public interface TagRepository extends JpaRepository<Tag, Long>, JpaSpecificatio
     @Transactional
     @Query(value = "INSERT INTO news_tag (news_id, tag_id) VALUES (:newsId, :tagId)", nativeQuery = true)
     void insertNewsTag(@Param("newsId") Long newsId, @Param("tagId") Long tagId);
+
+    List<Tag> findAllByActiveTrueAndDeletedFalse();
 
 
 }

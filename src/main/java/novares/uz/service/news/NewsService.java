@@ -17,6 +17,7 @@ import novares.uz.dto.news.NewsCrudDto;
 import novares.uz.dto.news.NewsTranslationCrudDto;
 import novares.uz.dto.news.NewsTranslationDto;
 import novares.uz.dto.tag.TagDto;
+import novares.uz.enums.NewsStatus;
 import novares.uz.mapper.auth.UserMapper;
 import novares.uz.mapper.category.CategoryTranslationMapper;
 import novares.uz.mapper.news.NewsMapper;
@@ -30,12 +31,15 @@ import novares.uz.repository.news.NewsTranslationRepository;
 import novares.uz.repository.tag.TagRepository;
 import novares.uz.service.GenericCrudService;
 import novares.uz.util.SpringSecurityUtil;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.ZonedDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -192,6 +196,7 @@ public class NewsService implements GenericCrudService<News, NewsCrudDto, NewsCr
         repository.delete(news);
     }
 
+    @Cacheable(value = "publicNewsDetail", key = "#slug + '_' + (#criteria.lang ?: 'default')")
     public Page<NewsCollection> getNewsBySlugAndLang(String slug, NewsCriteria criteria) {
         return repository.getNewsBySlugAndLang(
                 slug,
@@ -200,6 +205,7 @@ public class NewsService implements GenericCrudService<News, NewsCrudDto, NewsCr
         );
     }
 
+    @Cacheable(value = "publicNews", key = "#criteria.lang ?: 'default'")
     public Page<NewsCollection> getNewsFilteredForPublic(NewsCriteria criteria) {
         return repository.getNewsFilteredForPublic(
                 criteria.getCategoryId(),
@@ -209,5 +215,28 @@ public class NewsService implements GenericCrudService<News, NewsCrudDto, NewsCr
         );
     }
 
+    @Scheduled(cron = "0 * * * * *")
+    public void updateNewsStatuses() {
+        ZonedDateTime now = ZonedDateTime.now();
 
+        // publish_at <= now && status = DRAFT
+        List<News> toPublish = repository
+                .findAllByPublishAtLessThanEqualAndStatus(now, NewsStatus.DRAFT);
+
+        for (News news : toPublish) {
+            news.setStatus(NewsStatus.PUBLISHED);
+        }
+
+        // unpublish_at <= now && status = PUBLISHED
+        List<News> toUnpublish = repository
+                .findAllByUnpublishAtLessThanEqualAndStatus(now, NewsStatus.PUBLISHED);
+
+        for (News news : toUnpublish) {
+            news.setStatus(NewsStatus.UNPUBLISHED);
+        }
+
+        // Barchasini saqlaymiz
+        repository.saveAll(toPublish);
+        repository.saveAll(toUnpublish);
+    }
 }
